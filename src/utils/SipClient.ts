@@ -24,6 +24,12 @@ interface Client {
 	endpointId?: string;
 }
 
+/**
+ * Capability header: tells the backend this widget upserts transcript lines by
+ * `id`, so it may stream a line as it grows instead of sending it once.
+ */
+export const TRANSCRIPTION_UPSERT_HEADER = "X-Cognigy-Transcription-Upsert: 1";
+
 export class SipClient extends events.EventEmitter {
 	private _ua: IUA;
 	private _pcConfig?: RTCConfiguration;
@@ -38,6 +44,7 @@ export class SipClient extends events.EventEmitter {
 						`X-Organisation-Id: ${client.organisationId}`,
 						`X-Project-Id: ${client.projectId}`,
 						...(client.endpointId ? [`X-Endpoint-Id: ${client.endpointId}`] : []),
+						TRANSCRIPTION_UPSERT_HEADER,
 					]
 				: [];
 

@@ -7,10 +7,9 @@ import { AudioWaveAnimation } from "./AudioWaveAnimation";
 import CallControls from "./CallControls";
 import TranscriptSection from "./TranscriptSection";
 import { CallDurationDisplay } from "./CallDurationDisplay";
-import type { TranscriptMessage } from "./TranscriptDisplay";
-import { getLocalStore, shouldEnableEndCall, callReducer, initialCallState } from "../helpers";
+import { getLocalStore, shouldEnableEndCall, callReducer, initialCallState, applyTranscription } from "../helpers";
 import { CallActionType, ActionTypes } from "../types";
-import type { IUpdateableSettings, IWidgetInstance } from "../types";
+import type { IUpdateableSettings, IWidgetInstance, TranscriptionPayload } from "../types";
 import { useWebrtcContext, useWebrtcDispatch } from "./WebrtcContextProvider";
 import type { SipSession } from "../utils/SipSession";
 
@@ -171,30 +170,13 @@ const VoiceBotWidget = forwardRef<IWidgetInstance>((_, ref) => {
 				}
 			});
 
-			session.on("transcription", (transcription: { originator: 'bot' | 'user'; messages: Array<{ text: string }> }) => {
-				if (transcription.messages && transcription.messages.length > 0) {
-					const newMessages: TranscriptMessage[] = transcription.messages.map((msg, index) => ({
-						id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${index}`,
-						text: msg.text,
-						originator: transcription.originator,
-						timestamp: Date.now(),
-					}));
-					dispatch({
-						type: CallActionType.UPDATE_TRANSCRIPT_MESSAGES,
-						updater: (prev) => {
-							const deduped = newMessages.filter((newMsg) => {
-								const isDuplicate = prev.some(
-									(existing) =>
-										existing.text === newMsg.text &&
-										existing.originator === newMsg.originator &&
-										Math.abs(existing.timestamp - newMsg.timestamp) < 1000
-								);
-								return !isDuplicate;
-							});
-							return deduped.length > 0 ? [...prev, ...deduped] : prev;
-						},
-					});
-				}
+			session.on("transcription", (transcription: TranscriptionPayload) => {
+				if (!transcription?.messages?.length) return;
+				const receivedAt = Date.now();
+				dispatch({
+					type: CallActionType.UPDATE_TRANSCRIPT_MESSAGES,
+					updater: (prev) => applyTranscription(prev, transcription, receivedAt),
+				});
 			});
 
 			session.on("peerconnection", (pc: RTCPeerConnection) => {

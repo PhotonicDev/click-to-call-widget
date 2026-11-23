@@ -181,6 +181,22 @@ export type CallAction =
 	| { type: CallActionType.UPDATE_TRANSCRIPT_MESSAGES; updater: (prev: TranscriptMessage[]) => TranscriptMessage[] }
 	| { type: CallActionType.SYNC_SESSION; status: string | undefined; muted: boolean };
 
+/** One line of a `_transcription` SIP INFO body. */
+export interface TranscriptionPayloadMessage {
+	text: string;
+	/** Streamed lines carry a stable id: a later message with the same id and
+	 *  originator replaces the line's text instead of adding a bubble. */
+	id?: string;
+	/** True once a streamed line's text will not change any more. */
+	final?: boolean;
+}
+
+/** The `_transcription` object of a SIP INFO body. */
+export interface TranscriptionPayload {
+	originator: 'bot' | 'user';
+	messages: TranscriptionPayloadMessage[];
+}
+
 export interface UseDemoCallParams {
 	isTranscriptionEnabled: boolean | undefined;
 	dispatch: (action: CallAction) => void;

@@ -8,6 +8,10 @@ export interface TranscriptMessage {
 	text: string;
 	originator: 'bot' | 'user';
 	timestamp: number;
+	/** The backend's line id for a streamed line; later messages with it update this bubble. */
+	sourceId?: string;
+	/** False while a streamed line is still growing. */
+	final?: boolean;
 }
 
 interface TranscriptDisplayProps {

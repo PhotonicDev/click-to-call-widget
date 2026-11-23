@@ -93,6 +93,7 @@ describe("SIP contract", () => {
 			"X-Project-Id: proj-1",
 			"X-Endpoint-Id: ep-1",
 		]);
+		expect(opts.extraHeaders).toContain("X-Cognigy-Transcription-Upsert: 1");
 	});
 
 	it("places the INVITE only after the 1.2s ringing lead-in and plays the ringing tone", async () => {

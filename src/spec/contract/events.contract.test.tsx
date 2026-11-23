@@ -319,4 +319,36 @@ describe("consent and transcription contract", () => {
 
 		expect(await screen.findByText("Hi")).toBeInTheDocument();
 	});
+
+	it("streamed transcription lines update their bubble in place by id", async () => {
+		serveConfig(
+			legacyConfig({
+				endpointSettings: {
+					webrtcWidgetConfig: {
+						label: "",
+						active: true,
+						transcription: { enabled: true },
+					},
+				},
+			})
+		);
+		await mountWidget({ userId: "u-1" });
+		await clickCall();
+		await waitFor(() => expect(lastUA().call).toHaveBeenCalled(), TIMEOUT);
+
+		lastSession().progress();
+		lastSession().accept();
+		lastSession().receiveInfo(
+			'{"_transcription":{"originator":"bot","messages":[{"text":"Hello","id":"t1"}]}}'
+		);
+		expect(await screen.findByText("Hello")).toBeInTheDocument();
+
+		lastSession().receiveInfo(
+			'{"_transcription":{"originator":"bot","messages":[{"text":"Hello there","id":"t1","final":true}]}}'
+		);
+
+		expect(await screen.findByText("Hello there")).toBeInTheDocument();
+		expect(screen.queryByText("Hello")).not.toBeInTheDocument();
+		expect(document.querySelectorAll(".webrtc_transcript_bubble")).toHaveLength(1);
+	});
 });

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { UA } from "jssip";
-import { SipClient } from "../utils/SipClient";
+import { SipClient, TRANSCRIPTION_UPSERT_HEADER } from "../utils/SipClient";
 
 const mockUaInstance = {
 	on: vi.fn(),
@@ -36,6 +36,10 @@ describe("SipClient", () => {
 		);
 	});
 
+	it("exports the transcription upsert capability header", () => {
+		expect(TRANSCRIPTION_UPSERT_HEADER).toBe("X-Cognigy-Transcription-Upsert: 1");
+	});
+
 	it("declares X-Organisation-Id/X-Project-Id/X-Endpoint-Id when all three are known", () => {
 		const client = new SipClient(
 			{ ...baseClient, organisationId: "org-1", projectId: "proj-1", endpointId: "endpoint-1" },
@@ -47,7 +51,12 @@ describe("SipClient", () => {
 		expect(mockUaInstance.call).toHaveBeenCalledWith(
 			"app-123",
 			expect.objectContaining({
-				extraHeaders: ["X-Organisation-Id: org-1", "X-Project-Id: proj-1", "X-Endpoint-Id: endpoint-1"],
+				extraHeaders: [
+					"X-Organisation-Id: org-1",
+					"X-Project-Id: proj-1",
+					"X-Endpoint-Id: endpoint-1",
+					"X-Cognigy-Transcription-Upsert: 1",
+				],
 			})
 		);
 	});
@@ -63,7 +72,7 @@ describe("SipClient", () => {
 		expect(mockUaInstance.call).toHaveBeenCalledWith(
 			"app-123",
 			expect.objectContaining({
-				extraHeaders: ["X-Organisation-Id: org-1", "X-Project-Id: proj-1"],
+				extraHeaders: ["X-Organisation-Id: org-1", "X-Project-Id: proj-1", "X-Cognigy-Transcription-Upsert: 1"],
 			})
 		);
 	});
